@@ -16,6 +16,8 @@ import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.commands.BotCommand;
 import org.telegram.telegrambots.meta.api.objects.commands.scope.BotCommandScopeDefault;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.io.IOException;
@@ -49,9 +51,6 @@ public class InvestorBot extends TelegramLongPollingBot {
         commands.add(new BotCommand("/mydata", "сохранить мои данные"));
         commands.add(new BotCommand("/deletedata", "удалить мои данные"));
         commands.add(new BotCommand("/help", "информация о том как использвать этого бота"));
-        commands.add(new BotCommand("/settings", "установить свои предпочтения"));
-        commands.add(new BotCommand("/currencyrate", "получить курс рубля"));
-        commands.add(new BotCommand("/priceticker", "получить стоимость ценной бумаги"));
 
         try {
             this.execute(new SetMyCommands(commands, new BotCommandScopeDefault(), null));
@@ -75,31 +74,18 @@ public class InvestorBot extends TelegramLongPollingBot {
         Currency currency = new Currency();
         Securities securities = new Securities();
         String botResponse = "";
-        String defaultText = "Извините, такой команды нет";
         if (update.hasMessage() && update.getMessage().hasText()) {
             final String messageText = update.getMessage().getText();
             final String name = update.getMessage().getChat().getFirstName();
             long chatId = update.getMessage().getChatId();
 
             switch (messageText) {
-                case "/start":
+                case "/start" -> {
                     registerUser(update.getMessage());
                     startCommandReceived(chatId, name);
-                    break;
-                case "/currencyrate":
-                    try {
-                        botResponse = BotRequestsService.getCurrencyRate(messageText, currency);
-                    } catch (NumberFormatException | IOException e) {
-                        sendMessage(chatId, "Мы не нашли такой валюты." + "\n" +
-                                "Введите валюту, официальный курс которой" + "\n" +
-                                "вы хотите узнать относительно RUB." + "\n" +
-                                "Например: USD");
-                    } catch (ParseException e) {
-                        throw new RuntimeException(e);
-                    }
-                    sendMessage(chatId, botResponse);
-                    break;
-                case "/priceticker":
+                }
+                case "/help" -> sendMessage(chatId, HELP_TEXT);
+                default -> {
                     try {
                         botResponse = BotRequestsService.getSecuritiesRate(messageText, securities);
                     } catch (NumberFormatException | IOException e) {
@@ -111,12 +97,7 @@ public class InvestorBot extends TelegramLongPollingBot {
                         throw new RuntimeException(e);
                     }
                     sendMessage(chatId, botResponse);
-                    break;
-                case "/help":
-                    sendMessage(chatId, HELP_TEXT);
-                    break;
-                default:
-                    sendMessage(chatId, defaultText);
+                }
             }
         }
     }
@@ -137,7 +118,6 @@ public class InvestorBot extends TelegramLongPollingBot {
 
     private void startCommandReceived(long chatId, String name) {
         String response = EmojiParser.parseToUnicode("Привет, " + name + ", рад нашему знакомству!" + " :blush:");
-        //String response = "Привет, " + name + ", рад нашему знакомству!";
         sendMessage(chatId, response);
         log.info("Поприветствовал пользователя: " + name);
     }
@@ -146,6 +126,11 @@ public class InvestorBot extends TelegramLongPollingBot {
         SendMessage message = new SendMessage();
         message.setChatId(String.valueOf(chatId));
         message.setText(response);
+
+        ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
+        List<KeyboardRow> keyboardRows = new ArrayList<>();
+        KeyboardRow row = new KeyboardRow();
+
         try {
             execute(message);
         } catch (TelegramApiException e) {

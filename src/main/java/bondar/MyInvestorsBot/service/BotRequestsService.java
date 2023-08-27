@@ -14,7 +14,7 @@ import java.util.Scanner;
 
 @Service
 public class BotRequestsService {
-    public static String getCurrencyRate(String message, Currency model) throws IOException, ParseException {
+    /*public static String getCurrencyRate(String message, Currency model) throws IOException, ParseException {
         URL url = new URL("https://api.coingate.com/v2/rates/merchant/" + message + "/RUB");
         Scanner scanner = new Scanner((InputStream) url.getContent());
         StringBuilder result = new StringBuilder();
@@ -29,7 +29,7 @@ public class BotRequestsService {
         return "Official rate of BYN to " + model.getCur_Abbreviation() + "\n" +
                 "on the date: " + model.getDate() + "\n" +
                 "is: " + model.getCur_OfficialRate() + " " + model.getCur_Abbreviation();
-    }
+    }*/
 
     public static String getSecuritiesRate(String message, Securities model) throws IOException, ParseException {
         URL url = new URL("https://api.twelvedata.com/price?symbol=" + message + "&apikey=c8ce5abaed634b90bd5d0dcf7d1c625c");
